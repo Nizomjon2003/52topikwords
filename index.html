@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>So‘zlarni Yodlash</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Poppins", Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    color: #e5e7eb;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    background: rgba(30, 41, 59, 0.95);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+    backdrop-filter: blur(8px);
+    transition: transform 0.5s ease, opacity 0.4s ease;
+  }
+  .sidebar h2 {
+    font-size: 20px;
+    text-align: center;
+    color: #93c5fd;
+    margin-bottom: 20px;
+  }
+  .topic {
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .topic:hover { background: rgba(96,165,250,0.25); }
+  .topic.active { background: rgba(96,165,250,0.4); }
+
+  /* Top controls */
+  .top-controls {
+    position: fixed;
+    top: 14px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 20;
+    padding: 0 20px;
+  }
+
+  .menu-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .menu-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .swap-btn {
+    background: rgba(96,165,250,0.2);
+    border: 1px solid #60a5fa;
+    color: #e0f2fe;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .swap-btn:hover { background: rgba(96,165,250,0.35); transform: translateY(-2px); }
+
+  .hidden { display: none; }
+
+  /* Main */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    max-width: 420px;
+    width: 100%;
+    transform: scale(0.9);
+    opacity: 0;
+    animation: fadeIn 0.6s forwards ease-out;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .word-box {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    transition: opacity 0.3s ease;
+  }
+
+  .translation {
+    font-size: 24px;
+    color: #a5b4fc;
+    min-height: 35px;
+    transition: opacity 0.3s ease;
+  }
+
+  .buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    background: #60a5fa;
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover { background: #3b82f6; transform: translateY(-2px); }
+
+  footer {
+    position: absolute;
+    bottom: 8px;
+    width: 100%;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 14px;
+  }
+  footer span { color: #93c5fd; }
+
+  /* Mobile view */
+  @media (max-width: 768px) {
+    body { flex-direction: column; overflow: hidden; }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transform: translateX(-100%);
+      opacity: 0;
+      z-index: 15;
+    }
+    .sidebar.active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .main { padding-top: 100px; }
+    .word-box { font-size: 28px; }
+    .translation { font-size: 18px; }
+    .top-controls {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .menu-btn, .swap-btn {
+      width: auto;
+      font-size: 15px;
+      padding: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="top-controls">
+    <button class="menu-btn" id="menuBtn">📚 Mavzular</button>
+    <button class="swap-btn" id="swapModeBtn">🔄 O‘zbek → Koreys</button>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Mavzular</h2>
+    <div id="topicList"></div>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <div id="wordBox" class="word-box">Mavzuni tanlang</div>
+      <div id="translationBox" class="translation"></div>
+      <div class="buttons">
+        <button id="changeBtn" disabled>O‘zgartir</button>
+        <button id="showTransBtn" disabled>Tarjimani ko‘rsat</button>
+      </div>
+    </div>
+    <footer>
+      © 2025 <span>Jaloldinov Nizomjon</span> — Namangan Davlat Texnik Universiteti magistranti | AI Developer
+    </footer>
+  </div>
+
+<script>
+const sidebar = document.getElementById("sidebar");
+const topicList = document.getElementById("topicList");
+const wordBox = document.getElementById("wordBox");
+const translationBox = document.getElementById("translationBox");
+const changeBtn = document.getElementById("changeBtn");
+const showTransBtn = document.getElementById("showTransBtn");
+const menuBtn = document.getElementById("menuBtn");
+const swapModeBtn = document.getElementById("swapModeBtn");
+
+let currentTopic = null;
+let currentWord = null;
+let currentTranslation = null;
+let reverseMode = false;
+let shuffledList = [];
+let wordIndex = 0;
+
+// So'zlarni shuffle qilish funksiyasi
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Mavzular
+const topics = {
+"Topik 52 reading 1-25": [
+    ["meva", "과일"],
+    ["uzum", "포도"],
+    ["ta’m, mazza", "맛"],
+    ["narx, qiymat", "값"],
+    ["ta’til, o‘qishdan dam olish davri", "방학"],
+    ["dam olish kuni", "휴일"],
+    ["reja", "계획"],
+    ["ko‘zoynak", "안경"],
+    ["tarvuz", "수박"],
+    ["hamyon", "지갑"],
+    ["AQSH", "미국"],
+    ["och bo‘lmoq", "고프다"],
+    ["sayohat agentligi", "여행사"],
+    ["balki", "아마"],
+    ["eng, birinchi darajali", "제일"],
+    ["keng bo‘lmoq", "넓다"],
+    ["oson bo‘lmoq, qiyin emas", "쉽다"],
+    ["sotmoq", "팔다"],
+    ["qo‘shiq, kuylash", "노래"],
+    ["so‘ramoq, surishtirmoq", "물어보다"],
+    ["nikoh marosimi, to‘y", "결혼식"],
+    ["rasm", "사진"],
+    ["qarzga olmoq / ijaraga olmoq", "빌리다"],
+    ["suratga olmoq, rasm tushirmoq", "찍다"],
+    ["to‘lov, narx", "요금"]
+],
+
+
+ "Topik 52 reading 26-50": [
+    ["eslatma, yozuv", "메모"],
+    ["kichik", "작다"],
+    ["tugamoq, yakunlanmoq", "끝나다"],
+    ["pechenye, shirinlik", "과자"],
+    ["sovg‘a qilmoq", "선물하다"],
+    ["kinoteatr(bino)", "영화관"],
+    ["piyoda yurmoq", "걷다"],
+    ["odatda, ko‘pincha", "보통"],
+    ["velosiped", "자전거"],
+    ["ishga borish", "출근하다"],
+    ["ammo, lekin", "그런데"],
+    ["tug‘ilgan shahar, ota-ona yurt", "고향"],
+    ["qaytmoq, ketmoq", "돌아가다"],
+    ["salomlashuv, xayrlashuv", "인사"],
+    ["ajralmoq, xayrlashmoq", "헤어지다"],
+    ["ko‘z yoshi", "눈물"],
+    ["paydo bo‘lmoq, chiqmoq", "나다"],
+    ["ketmoq, tark etmoq", "떠나다"],
+    ["xafa bo‘lmoq", "슬프다"],
+    ["eskirmoq", "오래되다"],
+    ["almashtirmoq, o‘zgartirmoq", "바꾸다"],
+    ["hurmat bilan berish", "드리다"],
+    ["part-time ish", "아르바이트"],
+    ["har doim", "항상"],
+    ["chet el", "외국"]
+],
+
+
+
+ "Topik 52 reading 51-75": [
+    ["davr, muddat", "기간"],
+    ["belgilamoq, aniqlamoq", "정하다"],
+    ["mashhur bo‘lmoq", "유명하다"],
+    ["sayyohlik joyi, turist joyi", "관광지"],
+    ["qishloq, kichik shahar", "마을"],
+    ["qatnamoq, aylanib yurmoq", "다니다"],
+    ["haydamoq, mashina boshqarmoq", "운전하다"],
+    ["chiroyli", "예쁜"],
+    ["manzara", "경치"],
+    ["tomosha qilmoq", "구경하다"],
+    ["uzoq vaqt davomida", "오랫동안"],
+    ["yashamoq, qolmoq", "지내다"],
+    ["o‘zim / shaxsan", "직접"],
+    ["bir nechta", "여러"],
+    ["belgilamoq, aniqlamoq", "정하다"],
+    ["un", "밀가루"],
+    ["tarkibiy qism", "재료"],
+    ["turli xil", "다양한"],
+    ["joy", "곳"],
+    ["ishlatmoq", "사용하다"],
+    ["uzum", "포도"],
+    ["qulupnay", "딸기"],
+    ["yuvmoq", "씻다"],
+    ["hid", "냄새"],
+    ["idish, kosa", "그릇"]
+],
+
+
+ "Topik 52 reading 76-100": [
+    ["solmoq, qo‘ymoq", "넣다"],
+    ["bir kun", "하루"],
+    ["o‘tmoq, o‘tkazmoq", "지나다"],
+    ["hid chiqmoq", "냄새가 나다"],
+    ["va / shuningdek", "그리고"],
+    ["unda / shunday bo‘lsa", "그러면"],
+    ["lekin / ammo", "그러나"],
+    ["ishlatmoq, foydalamoq", "사용하다"],
+    ["skovarotka", "프라이팬"],
+    ["qolmoq, ortiqcha bo‘lmoq", "남다"],
+    ["yog‘", "기름"],
+    ["artmoq, tozalamoq", "닦다"],
+    ["osonlik bilan", "쉽게"],
+    ["tartib, ketma-ketlik", "순서"],
+    ["usul, metod", "방법"],
+    ["bola", "아이"],
+    ["teri", "피부"],
+    ["zaif bo‘lmoq", "약하다"],
+    ["sotmoq", "팔다"],
+    ["sovun", "비누"],
+    ["internet", "인터넷"],
+    ["mos kelmoq, to‘g‘ri kelmoq", "맞다"],
+    ["hoziroq", "금방"],
+    ["tanlamoq, tanlab olish", "고르다"],
+    ["yubormoq, jo‘natmoq", "보내다"]
+],
+
+
+ "Topik 52 reading 101-125": [
+    ["doimiy / tinimsiz", "계속"],
+    ["unchalik", "별로"],
+    ["guruch", "쌀"],
+    ["tabiat, tabiiy", "자연"],
+    ["ishlatmoq / foydalanmoq", "사용하다"],
+    ["xotin", "아내"],
+    ["qishloq", "시골"],
+    ["o‘smoq, ulg‘aymoq", "자라다"],
+    ["uylanish", "결혼하다"],
+    ["lekin / ammo / biroq", "하지만"],
+    ["shahar", "도시"],
+    ["hayot / yashash tarzi", "생활"],
+    ["baxtli bo‘lmoq", "행복하다"],
+    ["qishloq", "시골"],
+    ["qaytmoq, ortga qaytmoq", "돌아가다"],
+    ["sabab, omil", "때문"],
+    ["…dan oldin / …vaqtda", "전에"],
+    ["yer / tuproq", "땅"],
+    ["yetishtirmoq, parvarish qilmoq", "키우다"],
+    ["nihoyat / oxir-oqibat", "드디어"],
+    ["ko‘chish, yashash joyini almashtirish", "이사"],
+    ["o‘ng qo‘l", "오른손"],
+    ["yozuv, harflar", "글씨"],
+    ["chap qo‘l", "왼손"],
+    ["boshlamoq", "시작하다"]
+],
+
+
+ "Topik 52 reading 126-150": [
+    ["noqulay bo‘lmoq", "불편하다"],
+    ["odatlangan, o‘rganib qolmoq", "익숙하다"],
+    ["shikastlanmoq / jarohat olmoq", "다치다"],
+    ["eski bo‘lmoq, muddati o‘tmoq", "오래되다"],
+    ["tuxum", "달걀"],
+    ["tuzli suv", "소금물"],
+    ["qo‘ymoq / solmoq", "넣다"],
+    ["bo‘lmoq / amalga oshmoq", "되다"],
+    ["yangi, xom", "신선하다"],
+    ["bilmoq, tushunmoq", "알다"],
+    ["tag / pastki qism", "바닥"],
+    ["mahalla, qishloq", "동네"],
+    ["hayvon", "동물"],
+    ["qish", "겨울"],
+    ["deyarli", "별로"],
+    ["qo‘ymoq / tashlamoq", "놓다"],
+    ["quyon", "토끼"],
+    ["tog‘ qushi", "산새"],
+    ["sovuq (sifat)", "추운"],
+    ["olib yurmoq", "가지다"],
+    ["chiqmoq / ko‘tarilmoq", "올라가다"],
+    ["qiyin, og‘ir", "힘들다"],
+    ["kayfiyat / ruhiy holat", "기분"],
+    ["yoqmaslik, yoqtirmaslik", "싫다"],
+    ["pastga tushib kelmoq", "내려오다"]
+],
+
+
+
+ "Topik 52 reading 151-175": [
+    ["bir nechta", "여러"],
+    ["tur / xil", "가지"],
+    ["xizmat", "서비스"],
+    ["zavqlanmoq, bahramand bo‘lmoq", "즐기다"],
+    ["charchagan", "피곤한"],
+    ["uxlamoq", "자다"],
+    ["xona", "방"],
+    ["dush qabul qilmoq", "샤워하다"],
+    ["buzilmoq", "고장 나다"],
+    ["o‘rniga", "대신"],
+    ["qarzga bermoq", "빌려주다"],
+    ["xizmat", "서비스"],
+    ["iliq, issiq", "따뜻하다"],
+    ["uchun / maqsadida", "위해"],
+    ["qishki kiyim", "겨울옷"],
+    ["ishonib topshirmoq", "맡다"],
+    ["pasport", "여권"],
+    ["tuzatmoq", "고치다"],
+    ["qulay, foydali", "편리하다"],
+    ["deyarli", "별로"],
+    ["almashtirmoq / o‘zgartirmoq", "바꾸다"],
+    ["festival / bayram", "축제"],
+    ["ochilmoq", "열리다"],
+    ["sevmoq", "사랑하다"],
+    ["xotira, esdalik", "추억"]
+],
+
+
+ "Topik 52 reading 176-200": [
+    ["marjon", "목걸이"],
+    ["otkritka", "엽서"],
+    ["turli xil", "다양한"],
+    ["tadbir", "행사"],
+    ["qiziqish / e’tibor", "관심"],
+    ["sana", "날짜"],
+    ["tekshirmoq, tasdiqlamoq", "확인하다"],
+    ["mazmun / ichki ma’lumot", "내용"],
+    ["ma’lum qilmoq, xabar bermoq", "알리다"],
+    ["kerak bo‘lmoq", "필요하다"],
+    ["yig‘moq, to‘plash", "모으다"],
+    ["tayyorlamoq, tayyorlanmoq", "준비하다"],
+    ["bu yil", "올해"],
+    ["qatnashmoq, ishtirok etmoq", "참가하다"],
+    ["to‘lamoq 💵", "내다"],
+    ["yubormoq / jo‘natmoq", "보내다"],
+    ["mahalla, hudud", "동네"],
+    ["kurs", "학원"],
+    ["ochilmoq", "기다"],
+    ["bir muddat", "한참"],
+    ["turmoq / to‘xtamoq", "서다"],
+    ["qatnashmoq", "다니다"],
+    ["uyalmoq", "부끄럽다"],
+    ["quvonchli / zavqli bo‘lmoq", "즐겁다"],
+    ["bazan", "가끔"]
+],
+
+
+
+ "Topik 52 reading 201-235": [
+    ["yig‘ilish / uchrashuv", "모임"],
+    ["nabira qiz", "손녀"],
+    ["gapirmoq / aytmoq", "말하다"],
+    ["musiqiy ijro qilmoq / chalmoq", "연주하다"],
+    ["ro‘yxatdan o‘tish", "등록"],
+    ["eski", "오래된"],
+    ["unchalik / juda emas", "별로"],
+    ["kamaymoq", "적어지다"],
+    ["yangi tarzda / yangicha", "새롭게"],
+    ["o‘zgartirmoq", "바꾸다"],
+    ["do‘kon egasi", "가게 주인"],
+    ["namoyish qilmoq", "전시하다"],
+    ["chiroyli tarzda", "예쁘게"],
+    ["osmoq / ilmoq", "걸다"],
+    ["turli xil / xilma-xil", "다양한"],
+    ["buyumlar / narsalar", "물건"],
+    ["yozuv / harflar", "글씨"],
+    ["so‘nggi paytlarda", "최근"],
+    ["paydo bo‘lmoq", "생기다"],
+    ["orzu / tush", "꿈"],
+    ["mashhur / taniqli", "유명한"],
+    ["kino aktyori", "영화배우"],
+    ["aktyor / aktrisa", "배우"],
+    ["bo‘lmoq", "되다"],
+    ["o‘ylagandan ko‘ra", "생각보다"],
+    ["ertak kitobi", "동화책"],
+    ["kabi / singari", "처럼"],
+    ["sahnalashtirish", "연기"],
+    ["kulmoq", "웃다"],
+    ["olqish", "박수"],
+    ["kasb / ish", "직업"],
+    ["o‘zgartirmoq", "바꾸다"]
+]
+
+
+
+
+
+
+
+//   "2-dars": [
+//     ["soat", "시계"], ["ha", "네"], ["yo‘q", "아니요"], ["tufli", "구두"], 
+//     ["krasovka", "운동화"], ["gul", "꽃"], ["daftar", "공책"], ["daraxt", "나무"], 
+//     ["sumka", "가방"]
+//   ],
+//   "hafta kunlari": [
+//     ["dushanba", "월요일"], ["seshanba", "화요일"], ["chorshanba", "수요일"], 
+//     ["payshanba", "목요일"], ["juma", "금요일"], ["shanba", "토요일"], ["yakshanba", "일요일"]
+//   ],
+//   "son": [
+//     ["1", "일"], ["2", "이"], ["3", "삼"], ["4", "사"], ["5", "오"], 
+//     ["6", "육"], ["7", "칠"], ["8", "팔"], ["9", "구"], ["10", "십"]
+//   ]
+};
+
+// Mavzularni chiqarish
+for (let topic in topics) {
+  const div = document.createElement("div");
+  div.className = "topic";
+  div.textContent = topic;
+  div.onclick = () => selectTopic(topic, div);
+  topicList.appendChild(div);
+}
+
+// Menu va swap tugmalari
+menuBtn.onclick = () => {
+  sidebar.classList.toggle("active");
+  swapModeBtn.classList.toggle("hidden");
+};
+
+swapModeBtn.onclick = () => {
+  reverseMode = !reverseMode;
+  swapModeBtn.textContent = reverseMode ? "🔁 Koreys → O‘zbek" : "🔄 O‘zbek → Koreys";
+  if (currentTopic) showRandomWord();
+};
+
+// Mavzu tanlash
+function selectTopic(topic, element) {
+  document.querySelectorAll(".topic").forEach(el => el.classList.remove("active"));
+  element.classList.add("active");
+  currentTopic = topic;
+  changeBtn.disabled = false;
+  showTransBtn.disabled = false;
+
+  shuffledList = shuffleArray([...topics[currentTopic]]);
+  wordIndex = 0;
+  showRandomWord();
+  sidebar.classList.remove("active");
+  swapModeBtn.classList.remove("hidden");
+}
+
+// So'z ko'rsatish
+function showRandomWord() {
+  if (!shuffledList.length) return;
+
+  // Agar ro'yxat tugagan bo'lsa, "Boshidan boshlash" tugmasini ko'rsatamiz
+  if (wordIndex >= shuffledList.length) {
+    wordBox.textContent = "Boshidan boshlashni xohlaysizmi?";
+    translationBox.textContent = "";
+    changeBtn.disabled = true;
+    showTransBtn.disabled = true;
+
+    // Maxsus "Boshidan boshlash" tugmasi
+    const restartBtn = document.createElement("button");
+    restartBtn.textContent = "🔄 Boshidan boshlash";
+    restartBtn.onclick = () => {
+      shuffledList = shuffleArray([...topics[currentTopic]]);
+      wordIndex = 0;
+      changeBtn.disabled = false;
+      showTransBtn.disabled = false;
+      restartBtn.remove();
+      showRandomWord();
+    };
+    document.querySelector(".buttons").appendChild(restartBtn);
+    return;
+  }
+
+  const newItem = shuffledList[wordIndex];
+  wordIndex++;
+
+  if (reverseMode) {
+    currentWord = newItem[1];
+    currentTranslation = newItem[0];
+  } else {
+    currentWord = newItem[0];
+    currentTranslation = newItem[1];
+  }
+
+  wordBox.style.opacity = 0;
+  translationBox.style.opacity = 0;
+  setTimeout(() => {
+    wordBox.textContent = currentWord;
+    translationBox.textContent = "";
+    wordBox.style.opacity = 1;
+  }, 200);
+}
+
+changeBtn.onclick = showRandomWord;
+
+showTransBtn.onclick = () => {
+  translationBox.style.opacity = 0;
+  setTimeout(() => {
+    translationBox.innerHTML = `${currentWord} → <strong>${currentTranslation}</strong>`;
+    translationBox.style.opacity = 1;
+  }, 200);
+};
+</script>
+</body>
+</html>
