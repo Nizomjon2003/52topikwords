@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>So‘zlarni Yodla</title>
+<title>So‘zlarni Yodlash</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -155,7 +155,7 @@
   }
   footer span { color: #93c5fd; }
 
-  /* Mobile view */
+  /* 📱 Mobile view fix */
   @media (max-width: 768px) {
     body { flex-direction: column; overflow: hidden; }
     .sidebar {
@@ -185,6 +185,24 @@
       padding: 10px;
     }
   }
+  .sidebar.active {
+    overflow-y: auto;
+
+    .sidebar {
+    width: 260px;
+    background: rgba(30, 41, 59, 0.95);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+    backdrop-filter: blur(8px);
+    transition: transform 0.5s ease, opacity 0.4s ease;
+    
+    /* 🔥 MUAMMONI HAL QILADIGAN QISM */
+    overflow-y: auto;
+    max-height: 100vh;
+}
+
+}
+
 </style>
 </head>
 <body>
@@ -214,33 +232,21 @@
   </div>
 
 <script>
-const sidebar = document.getElementById("sidebar");
-const topicList = document.getElementById("topicList");
-const wordBox = document.getElementById("wordBox");
-const translationBox = document.getElementById("translationBox");
-const changeBtn = document.getElementById("changeBtn");
-const showTransBtn = document.getElementById("showTransBtn");
-const menuBtn = document.getElementById("menuBtn");
-const swapModeBtn = document.getElementById("swapModeBtn");
+  const sidebar = document.getElementById("sidebar");
+  const topicList = document.getElementById("topicList");
+  const wordBox = document.getElementById("wordBox");
+  const translationBox = document.getElementById("translationBox");
+  const changeBtn = document.getElementById("changeBtn");
+  const showTransBtn = document.getElementById("showTransBtn");
+  const menuBtn = document.getElementById("menuBtn");
+  const swapModeBtn = document.getElementById("swapModeBtn");
 
-let currentTopic = null;
-let currentWord = null;
-let currentTranslation = null;
-let reverseMode = false;
-let shuffledList = [];
-let wordIndex = 0;
+  let currentTopic = null;
+  let currentWord = null;
+  let currentTranslation = null;
+  let reverseMode = false;
 
-// So'zlarni shuffle qilish funksiyasi
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
-// Mavzular
-const topics = {
+  const topics = {
 "Topik 52 reading 1-25": [
     ["meva", "과일"],
     ["uzum", "포도"],
@@ -513,117 +519,67 @@ const topics = {
 
 
 
+  };
 
-
-
-
-//   "2-dars": [
-//     ["soat", "시계"], ["ha", "네"], ["yo‘q", "아니요"], ["tufli", "구두"], 
-//     ["krasovka", "운동화"], ["gul", "꽃"], ["daftar", "공책"], ["daraxt", "나무"], 
-//     ["sumka", "가방"]
-//   ],
-//   "hafta kunlari": [
-//     ["dushanba", "월요일"], ["seshanba", "화요일"], ["chorshanba", "수요일"], 
-//     ["payshanba", "목요일"], ["juma", "금요일"], ["shanba", "토요일"], ["yakshanba", "일요일"]
-//   ],
-//   "son": [
-//     ["1", "일"], ["2", "이"], ["3", "삼"], ["4", "사"], ["5", "오"], 
-//     ["6", "육"], ["7", "칠"], ["8", "팔"], ["9", "구"], ["10", "십"]
-//   ]
-};
-
-// Mavzularni chiqarish
-for (let topic in topics) {
-  const div = document.createElement("div");
-  div.className = "topic";
-  div.textContent = topic;
-  div.onclick = () => selectTopic(topic, div);
-  topicList.appendChild(div);
-}
-
-// Menu va swap tugmalari
-menuBtn.onclick = () => {
-  sidebar.classList.toggle("active");
-  swapModeBtn.classList.toggle("hidden");
-};
-
-swapModeBtn.onclick = () => {
-  reverseMode = !reverseMode;
-  swapModeBtn.textContent = reverseMode ? "🔁 Koreys → O‘zbek" : "🔄 O‘zbek → Koreys";
-  if (currentTopic) showRandomWord();
-};
-
-// Mavzu tanlash
-function selectTopic(topic, element) {
-  document.querySelectorAll(".topic").forEach(el => el.classList.remove("active"));
-  element.classList.add("active");
-  currentTopic = topic;
-  changeBtn.disabled = false;
-  showTransBtn.disabled = false;
-
-  shuffledList = shuffleArray([...topics[currentTopic]]);
-  wordIndex = 0;
-  showRandomWord();
-  sidebar.classList.remove("active");
-  swapModeBtn.classList.remove("hidden");
-}
-
-// So'z ko'rsatish
-function showRandomWord() {
-  if (!shuffledList.length) return;
-
-  // Agar ro'yxat tugagan bo'lsa, "Boshidan boshlash" tugmasini ko'rsatamiz
-  if (wordIndex >= shuffledList.length) {
-    wordBox.textContent = "Boshidan boshlashni xohlaysizmi?";
-    translationBox.textContent = "";
-    changeBtn.disabled = true;
-    showTransBtn.disabled = true;
-
-    // Maxsus "Boshidan boshlash" tugmasi
-    const restartBtn = document.createElement("button");
-    restartBtn.textContent = "🔄 Boshidan boshlash";
-    restartBtn.onclick = () => {
-      shuffledList = shuffleArray([...topics[currentTopic]]);
-      wordIndex = 0;
-      changeBtn.disabled = false;
-      showTransBtn.disabled = false;
-      restartBtn.remove();
-      showRandomWord();
-    };
-    document.querySelector(".buttons").appendChild(restartBtn);
-    return;
+  // Mavzularni chiqarish
+  for (let topic in topics) {
+    const div = document.createElement("div");
+    div.className = "topic";
+    div.textContent = topic;
+    div.onclick = () => selectTopic(topic, div);
+    topicList.appendChild(div);
   }
 
-  const newItem = shuffledList[wordIndex];
-  wordIndex++;
+  menuBtn.onclick = () => {
+    sidebar.classList.toggle("active");
+    swapModeBtn.classList.toggle("hidden"); // 📱 Mavzular ochilganda yashir
+  };
 
-  if (reverseMode) {
-    currentWord = newItem[1];
-    currentTranslation = newItem[0];
-  } else {
-    currentWord = newItem[0];
-    currentTranslation = newItem[1];
+  swapModeBtn.onclick = () => {
+    reverseMode = !reverseMode;
+    swapModeBtn.textContent = reverseMode ? "🔁 Koreys → O‘zbek" : "🔄 O‘zbek → Koreys";
+    if (currentTopic) showRandomWord();
+  };
+
+  function selectTopic(topic, element) {
+    document.querySelectorAll(".topic").forEach(el => el.classList.remove("active"));
+    element.classList.add("active");
+    currentTopic = topic;
+    changeBtn.disabled = false;
+    showTransBtn.disabled = false;
+    showRandomWord();
+    sidebar.classList.remove("active");
+    swapModeBtn.classList.remove("hidden"); // ✅ Dars tanlanganda yana chiqadi
   }
 
-  wordBox.style.opacity = 0;
-  translationBox.style.opacity = 0;
-  setTimeout(() => {
-    wordBox.textContent = currentWord;
-    translationBox.textContent = "";
-    wordBox.style.opacity = 1;
-  }, 200);
-}
+  function showRandomWord() {
+    const list = topics[currentTopic];
+    const newItem = list[Math.floor(Math.random() * list.length)];
+    if (reverseMode) {
+      currentWord = newItem[1];
+      currentTranslation = newItem[0];
+    } else {
+      currentWord = newItem[0];
+      currentTranslation = newItem[1];
+    }
+    wordBox.style.opacity = 0;
+    translationBox.style.opacity = 0;
+    setTimeout(() => {
+      wordBox.textContent = currentWord;
+      translationBox.textContent = "";
+      wordBox.style.opacity = 1;
+    }, 200);
+  }
 
-changeBtn.onclick = showRandomWord;
+  changeBtn.onclick = showRandomWord;
 
-showTransBtn.onclick = () => {
-  translationBox.style.opacity = 0;
-  setTimeout(() => {
-    translationBox.innerHTML = `${currentWord} → <strong>${currentTranslation}</strong>`;
-    translationBox.style.opacity = 1;
-  }, 200);
-};
+  showTransBtn.onclick = () => {
+    translationBox.style.opacity = 0;
+    setTimeout(() => {
+      translationBox.innerHTML = `${currentWord} → <strong>${currentTranslation}</strong>`;
+      translationBox.style.opacity = 1;
+    }, 200);
+  };
 </script>
 </body>
-
 </html>
